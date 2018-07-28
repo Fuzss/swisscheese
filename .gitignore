@@ -32,7 +32,6 @@ gradle-app.setting
 .mtj.tmp/
 
 # Package Files #
-*.jar
 *.war
 *.ear
 
@@ -48,5 +47,4 @@ hs_err_pid*
 run/
 .DS_Store
 mineshot.iml
-gradle.properties
 classes/

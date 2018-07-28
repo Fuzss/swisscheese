@@ -1,18 +1,33 @@
 package fuzs.swisscheese.worldgen;
 
 import com.google.common.base.MoreObjects;
+import fuzs.swisscheese.config.ConfigHandler;
 import net.minecraft.block.BlockSand;
+import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Biomes;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.gen.MapGenCaves;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 public class MapGenCavesSwiss extends MapGenCaves {
+
+    protected static final IBlockState FLOWING_LAVA = Blocks.FLOWING_LAVA.getDefaultState();
+    protected static final IBlockState BLK_MAGMA = Blocks.MAGMA.getDefaultState();
+    protected static final IBlockState BLK_OBSIDIAN = Blocks.OBSIDIAN.getDefaultState();
+    protected static final IBlockState BLK_AIR = Blocks.AIR.getDefaultState();
+    protected static final IBlockState FLOWING_WATER = Blocks.FLOWING_WATER.getDefaultState();
+
+    public static final List<Biome> AQUATIC_BIOMES = Arrays.<Biome>asList(Biomes.OCEAN, Biomes.DEEP_OCEAN, Biomes.FROZEN_OCEAN);
+    private boolean isAquaticBiome = false;
 
     protected void addRoom(long p_180703_1_, int p_180703_3_, int p_180703_4_, ChunkPrimer p_180703_5_, double p_180703_6_, double p_180703_8_, double p_180703_10_)
     {
@@ -151,44 +166,37 @@ public class MapGenCavesSwiss extends MapGenCaves {
                         }
                     }
 
-                    if (!flag3)
+                    if (!flag3 || isAquaticBiome)
                     {
                         BlockPos.MutableBlockPos blockpos$mutableblockpos = new BlockPos.MutableBlockPos();
 
-                        for (int j3 = k2; j3 < k; ++j3)
-                        {
-                            double d10 = ((double)(j3 + p_180702_3_ * 16) + 0.5D - p_180702_6_) / d2;
+                        for (int j3 = k2; j3 < k; ++j3) {
+                            double d10 = ((double) (j3 + p_180702_3_ * 16) + 0.5D - p_180702_6_) / d2;
 
-                            for (int i2 = i3; i2 < i1; ++i2)
-                            {
-                                double d8 = ((double)(i2 + p_180702_4_ * 16) + 0.5D - p_180702_10_) / d2;
+                            for (int i2 = i3; i2 < i1; ++i2) {
+                                double d8 = ((double) (i2 + p_180702_4_ * 16) + 0.5D - p_180702_10_) / d2;
                                 boolean flag1 = false;
 
-                                if (d10 * d10 + d8 * d8 < 1.0D)
-                                {
-                                    for (int j2 = l; j2 > l2; --j2)
-                                    {
-                                        double d9 = ((double)(j2 - 1) + 0.5D - p_180702_8_) / d3;
+                                if (d10 * d10 + d8 * d8 < 1.0D) {
+                                    for (int j2 = l; j2 > l2; --j2) {
+                                        double d9 = ((double) (j2 - 1) + 0.5D - p_180702_8_) / d3;
 
-                                        if (d9 > -0.7D && d10 * d10 + d9 * d9 + d8 * d8 < 1.0D)
-                                        {
+                                        if (d9 > -0.7D && d10 * d10 + d9 * d9 + d8 * d8 < 1.0D) {
                                             IBlockState iblockstate1 = p_180702_5_.getBlockState(j3, j2, i2);
-                                            IBlockState iblockstate2 = (IBlockState)MoreObjects.firstNonNull(p_180702_5_.getBlockState(j3, j2 + 1, i2), BLK_AIR);
+                                            IBlockState iblockstate2 = (IBlockState) MoreObjects.firstNonNull(p_180702_5_.getBlockState(j3, j2 + 1, i2), isAquaticBiome ? FLOWING_WATER : BLK_AIR);
 
-                                            if (isTopBlock(p_180702_5_, j3, j2, i2, p_180702_3_, p_180702_4_))
-                                            {
+                                            if (isTopBlock(p_180702_5_, j3, j2, i2, p_180702_3_, p_180702_4_)) {
                                                 flag1 = true;
                                             }
 
-                                            digBlock(p_180702_5_, j3, j2, i2, p_180702_3_, p_180702_4_, flag1, iblockstate1, iblockstate2);
+                                            digBlock(random, p_180702_5_, j3, j2, i2, p_180702_3_, p_180702_4_, flag1, iblockstate1, iblockstate2);
                                         }
                                     }
                                 }
                             }
                         }
 
-                        if (flag2)
-                        {
+                        if (flag2) {
                             break;
                         }
                     }
@@ -203,6 +211,8 @@ public class MapGenCavesSwiss extends MapGenCaves {
     @Override
     protected void recursiveGenerate(World worldIn, int chunkX, int chunkZ, int originalX, int originalZ, ChunkPrimer chunkPrimerIn)
     {
+        isAquaticBiome = this.world.getBiomeProvider().areBiomesViable(chunkX * 16 + 8, chunkZ * 16 + 8, 29, AQUATIC_BIOMES) && ConfigHandler.aquaticCavities;
+
         int i = this.rand.nextInt(this.rand.nextInt(this.rand.nextInt(40) + 1) + 1);
 
         if (this.rand.nextInt(15) != 0)
@@ -239,6 +249,51 @@ public class MapGenCavesSwiss extends MapGenCaves {
         }
     }
 
+    @Override
+    protected boolean canReplaceBlock(IBlockState p_175793_1_, IBlockState p_175793_2_)
+    {
+        if (p_175793_1_.getBlock() == Blocks.STONE)
+        {
+            return true;
+        }
+        else if (p_175793_1_.getBlock() == Blocks.DIRT)
+        {
+            return true;
+        }
+        else if (p_175793_1_.getBlock() == Blocks.GRASS)
+        {
+            return true;
+        }
+        else if (p_175793_1_.getBlock() == Blocks.HARDENED_CLAY)
+        {
+            return true;
+        }
+        else if (p_175793_1_.getBlock() == Blocks.STAINED_HARDENED_CLAY)
+        {
+            return true;
+        }
+        else if (p_175793_1_.getBlock() == Blocks.SANDSTONE)
+        {
+            return true;
+        }
+        else if (p_175793_1_.getBlock() == Blocks.RED_SANDSTONE)
+        {
+            return true;
+        }
+        else if (p_175793_1_.getBlock() == Blocks.MYCELIUM)
+        {
+            return true;
+        }
+        else if (p_175793_1_.getBlock() == Blocks.SNOW_LAYER)
+        {
+            return true;
+        }
+        else
+        {
+            return (p_175793_1_.getBlock() == Blocks.SAND || p_175793_1_.getBlock() == Blocks.GRAVEL) && (p_175793_2_.getMaterial() != Material.WATER || isAquaticBiome);
+        }
+    }
+
     //Exception biomes to make sure we generate like vanilla
     private boolean isExceptionBiome(net.minecraft.world.biome.Biome biome)
     {
@@ -270,7 +325,7 @@ public class MapGenCavesSwiss extends MapGenCaves {
      * @param chunkZ Chunk Y position
      * @param foundTop True if we've encountered the biome's top block. Ideally if we've broken the surface.
      */
-    protected void digBlock(ChunkPrimer data, int x, int y, int z, int chunkX, int chunkZ, boolean foundTop, IBlockState state, IBlockState up)
+    protected void digBlock(Random random, ChunkPrimer data, int x, int y, int z, int chunkX, int chunkZ, boolean foundTop, IBlockState state, IBlockState up)
     {
         net.minecraft.world.biome.Biome biome = world.getBiome(new BlockPos(x + chunkX * 16, 0, z + chunkZ * 16));
         IBlockState top = biome.topBlock;
@@ -278,15 +333,22 @@ public class MapGenCavesSwiss extends MapGenCaves {
 
         if (this.canReplaceBlock(state, up) || state.getBlock() == top.getBlock() || state.getBlock() == filler.getBlock())
         {
-            if (y - 1 < 10)
+            if (y - 1 == 9 && isAquaticBiome)
             {
-                data.setBlockState(x, y, z, BLK_LAVA);
+                if (random.nextInt(3) == 0) {
+                    data.setBlockState(x, y, z, BLK_MAGMA);
+                } else {
+                    data.setBlockState(x, y, z, BLK_OBSIDIAN);
+                }
+            } else if (y - 1 < 10)
+            {
+                data.setBlockState(x, y, z, FLOWING_LAVA);
             }
             else
             {
-                data.setBlockState(x, y, z, BLK_AIR);
+                data.setBlockState(x, y, z, isAquaticBiome ? FLOWING_WATER : BLK_AIR);
 
-                if (up.getBlock() == Blocks.SAND)
+                if (up.getBlock() == Blocks.SAND && ConfigHandler.sandstoneEntrances)
                 {
                     data.setBlockState(x, y + 1, z, up.getValue(BlockSand.VARIANT) == BlockSand.EnumType.RED_SAND ? BLK_RED_SANDSTONE : BLK_SANDSTONE);
                 }

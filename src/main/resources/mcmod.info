@@ -2,9 +2,8 @@
 {
   "modid": "swisscheese",
   "name": "Swiss Cheese",
-  "description": "Changes cave gen back to be more dense like it was before the 1.7 update.",
-  "version": "1.0.1",
-  "mcversion": "1.12.2",
+  "description": "Bringing back Swiss cheese cave generation from before the 1.7 update and more!",
+  "version": "1.1",
   "url": "https://minecraft.curseforge.com/projects/swiss-cheese",
   "authorList": ["Fuzs"]
 }

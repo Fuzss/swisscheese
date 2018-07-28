@@ -127,68 +127,39 @@ public class MapGenCavesHellSwiss extends MapGenBase {
                         i1 = 16;
                     }
 
-                    boolean flag2 = false;
-
-                    for (int j1 = j2; !flag2 && j1 < k; ++j1)
+                    for (int i3 = j2; i3 < k; ++i3)
                     {
-                        for (int k1 = l2; !flag2 && k1 < i1; ++k1)
+                        double d10 = ((double)(i3 + p_180704_3_ * 16) + 0.5D - p_180704_6_) / d2;
+
+                        for (int j3 = l2; j3 < i1; ++j3)
                         {
-                            for (int l1 = l + 1; !flag2 && l1 >= k2 - 1; --l1)
+                            double d8 = ((double)(j3 + p_180704_4_ * 16) + 0.5D - p_180704_10_) / d2;
+
+                            for (int i2 = l; i2 > k2; --i2)
                             {
-                                if (l1 >= 0 && l1 < 128)
+                                double d9 = ((double)(i2 - 1) + 0.5D - p_180704_8_) / d3;
+
+                                if (d9 > -0.7D && d10 * d10 + d9 * d9 + d8 * d8 < 1.0D)
                                 {
-                                    IBlockState iblockstate = p_180704_5_.getBlockState(j1, l1, k1);
+                                    IBlockState iblockstate1 = p_180704_5_.getBlockState(i3, i2, j3);
 
-                                    if (iblockstate.getBlock() == Blocks.FLOWING_LAVA || iblockstate.getBlock() == Blocks.LAVA)
+                                    if (iblockstate1.getBlock() == Blocks.NETHERRACK || iblockstate1.getBlock() == Blocks.GRAVEL || iblockstate1.getBlock() == Blocks.SOUL_SAND)
                                     {
-                                        flag2 = true;
-                                    }
-
-                                    if (l1 != k2 - 1 && j1 != j2 && j1 != k - 1 && k1 != l2 && k1 != i1 - 1)
-                                    {
-                                        l1 = k2;
+                                        if (i2 - 1 < 31)
+                                        {
+                                            p_180704_5_.setBlockState(i3, i2, j3, FLOWING_LAVA);
+                                        } else {
+                                            p_180704_5_.setBlockState(i3, i2, j3, AIR);
+                                        }
                                     }
                                 }
                             }
                         }
                     }
 
-                    if (!flag2)
+                    if (flag1)
                     {
-                        for (int i3 = j2; i3 < k; ++i3)
-                        {
-                            double d10 = ((double)(i3 + p_180704_3_ * 16) + 0.5D - p_180704_6_) / d2;
-
-                            for (int j3 = l2; j3 < i1; ++j3)
-                            {
-                                double d8 = ((double)(j3 + p_180704_4_ * 16) + 0.5D - p_180704_10_) / d2;
-
-                                for (int i2 = l; i2 > k2; --i2)
-                                {
-                                    double d9 = ((double)(i2 - 1) + 0.5D - p_180704_8_) / d3;
-
-                                    if (d9 > -0.7D && d10 * d10 + d9 * d9 + d8 * d8 < 1.0D)
-                                    {
-                                        IBlockState iblockstate1 = p_180704_5_.getBlockState(i3, i2, j3);
-
-                                        if (iblockstate1.getBlock() == Blocks.NETHERRACK || iblockstate1.getBlock() == Blocks.GRAVEL || iblockstate1.getBlock() == Blocks.SOUL_SAND)
-                                        {
-                                            if (i2 - 1 < 31)
-                                            {
-                                                p_180704_5_.setBlockState(i3, i2, j3, FLOWING_LAVA);
-                                            } else {
-                                                p_180704_5_.setBlockState(i3, i2, j3, AIR);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        if (flag1)
-                        {
-                            break;
-                        }
+                        break;
                     }
                 }
             }
@@ -198,7 +169,7 @@ public class MapGenCavesHellSwiss extends MapGenBase {
     /**
      * Recursively called by generate()
      */
-    protected void func_180701_a(World worldIn, int chunkX, int chunkZ, int originalX, int originalZ, ChunkPrimer chunkPrimerIn)
+    protected void recursiveGenerate(World worldIn, int chunkX, int chunkZ, int originalX, int originalZ, ChunkPrimer chunkPrimerIn)
     {
         int i = this.rand.nextInt(this.rand.nextInt(this.rand.nextInt(10) + 1) + 1);
 

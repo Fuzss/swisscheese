@@ -1,25 +1,36 @@
 package fuzs.swisscheese.worldgen;
 
 import com.google.common.base.MoreObjects;
+import fuzs.swisscheese.config.ConfigHandler;
 import net.minecraft.block.BlockSand;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Biomes;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.gen.MapGenRavine;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 public class MapGenRavineSwiss extends MapGenRavine
 {
     protected static final IBlockState FLOWING_LAVA = Blocks.FLOWING_LAVA.getDefaultState();
+    protected static final IBlockState BLK_MAGMA = Blocks.MAGMA.getDefaultState();
+    protected static final IBlockState BLK_OBSIDIAN = Blocks.OBSIDIAN.getDefaultState();
     protected static final IBlockState BLK_AIR = Blocks.AIR.getDefaultState();
+    protected static final IBlockState FLOWING_WATER = Blocks.FLOWING_WATER.getDefaultState();
     protected static final IBlockState BLK_SANDSTONE = Blocks.SANDSTONE.getDefaultState();
     protected static final IBlockState BLK_RED_SANDSTONE = Blocks.RED_SANDSTONE.getDefaultState();
     private final float[] rs = new float[1024];
+
+    public static final List<Biome> AQUATIC_BIOMES = Arrays.<Biome>asList(Biomes.OCEAN, Biomes.DEEP_OCEAN, Biomes.FROZEN_OCEAN);
+    private boolean isAquaticBiome = false;
 
     protected void addTunnel(long p_180707_1_, int p_180707_3_, int p_180707_4_, ChunkPrimer p_180707_5_, double p_180707_6_, double p_180707_8_, double p_180707_10_, float p_180707_12_, float p_180707_13_, float p_180707_14_, int p_180707_15_, int p_180707_16_, double p_180707_17_)
     {
@@ -149,7 +160,7 @@ public class MapGenRavineSwiss extends MapGenRavine
                         }
                     }
 
-                    if (!flag2)
+                    if (!flag2 || isAquaticBiome)
                     {
                         for (int j3 = k2; j3 < k; ++j3)
                         {
@@ -169,14 +180,14 @@ public class MapGenRavineSwiss extends MapGenRavine
                                         if ((d10 * d10 + d7 * d7) * (double)this.rs[j2 - 1] + d8 * d8 / 6.0D < 1.0D)
                                         {
                                             IBlockState iblockstate1 = p_180707_5_.getBlockState(j3, j2, i2);
-                                            IBlockState iblockstate2 = (IBlockState) MoreObjects.firstNonNull(p_180707_5_.getBlockState(j3, j2 + 1, i2), BLK_AIR);
+                                            IBlockState iblockstate2 = (IBlockState) MoreObjects.firstNonNull(p_180707_5_.getBlockState(j3, j2 + 1, i2), isAquaticBiome ? FLOWING_WATER : BLK_AIR);
 
                                             if (isTopBlock(p_180707_5_, j3, j2, i2, p_180707_3_, p_180707_4_))
                                             {
                                                 flag = true;
                                             }
 
-                                            digBlock(p_180707_5_, j3, j2, i2, p_180707_3_, p_180707_4_, flag, iblockstate1, iblockstate2);
+                                            digBlock(random, p_180707_5_, j3, j2, i2, p_180707_3_, p_180707_4_, flag, iblockstate1, iblockstate2);
                                         }
                                     }
                                 }
@@ -233,7 +244,7 @@ public class MapGenRavineSwiss extends MapGenRavine
         }
         else
         {
-            return (p_175793_1_.getBlock() == Blocks.SAND || p_175793_1_.getBlock() == Blocks.GRAVEL) && p_175793_2_.getMaterial() != Material.WATER;
+            return (p_175793_1_.getBlock() == Blocks.SAND || p_175793_1_.getBlock() == Blocks.GRAVEL) && (p_175793_2_.getMaterial() != Material.WATER || isAquaticBiome);
         }
     }
 
@@ -243,6 +254,8 @@ public class MapGenRavineSwiss extends MapGenRavine
     @Override
     protected void recursiveGenerate(World worldIn, int chunkX, int chunkZ, int originalX, int originalZ, ChunkPrimer chunkPrimerIn)
     {
+        isAquaticBiome = this.world.getBiomeProvider().areBiomesViable(chunkX * 16 + 8, chunkZ * 16 + 8, 29, AQUATIC_BIOMES) && ConfigHandler.aquaticCavities;
+
         if (this.rand.nextInt(50) == 0)
         {
             double d0 = (double)(chunkX * 16 + this.rand.nextInt(16));
@@ -255,7 +268,7 @@ public class MapGenRavineSwiss extends MapGenRavine
                 float f = this.rand.nextFloat() * ((float)Math.PI * 2F);
                 float f1 = (this.rand.nextFloat() - 0.5F) * 2.0F / 8.0F;
                 float f2 = (this.rand.nextFloat() * 2.0F + this.rand.nextFloat()) * 2.0F;
-                this.addTunnel(this.rand.nextLong(), originalX, originalZ, chunkPrimerIn, d0, d1, d2, f2, f, f1, 0, 0, 3.0D);
+                this.addTunnel(this.rand.nextLong(), originalX, originalZ, chunkPrimerIn, d0, d1, d2, isAquaticBiome ? f2 * 1.5F : f2, f, f1, 0, 0, 3.0D);
             }
         }
     }
@@ -298,7 +311,7 @@ public class MapGenRavineSwiss extends MapGenRavine
      * @param chunkZ Chunk Y position
      * @param foundTop True if we've encountered the biome's top block. Ideally if we've broken the surface.
      */
-    protected void digBlock(ChunkPrimer data, int x, int y, int z, int chunkX, int chunkZ, boolean foundTop, IBlockState state, IBlockState up)
+    protected void digBlock(Random random, ChunkPrimer data, int x, int y, int z, int chunkX, int chunkZ, boolean foundTop, IBlockState state, IBlockState up)
     {
         net.minecraft.world.biome.Biome biome = world.getBiome(new BlockPos(x + chunkX * 16, 0, z + chunkZ * 16));
         IBlockState top = isExceptionBiome(biome) ? Blocks.GRASS.getDefaultState() : biome.topBlock;
@@ -306,15 +319,22 @@ public class MapGenRavineSwiss extends MapGenRavine
 
         if (this.canReplaceBlock(state, up) || state.getBlock() == top.getBlock() || state.getBlock() == filler.getBlock())
         {
-            if (y - 1 < 10)
+            if (y - 1 == 9 && isAquaticBiome)
+            {
+                if (random.nextInt(3) == 0) {
+                    data.setBlockState(x, y, z, BLK_MAGMA);
+                } else {
+                    data.setBlockState(x, y, z, BLK_OBSIDIAN);
+                }
+            } else if (y - 1 < 10)
             {
                 data.setBlockState(x, y, z, FLOWING_LAVA);
             }
             else
             {
-                data.setBlockState(x, y, z, AIR);
+                data.setBlockState(x, y, z, isAquaticBiome ? FLOWING_WATER : BLK_AIR);
 
-                if (up.getBlock() == Blocks.SAND)
+                if (up.getBlock() == Blocks.SAND && ConfigHandler.sandstoneEntrances)
                 {
                     data.setBlockState(x, y + 1, z, up.getValue(BlockSand.VARIANT) == BlockSand.EnumType.RED_SAND ? BLK_RED_SANDSTONE : BLK_SANDSTONE);
                 }
